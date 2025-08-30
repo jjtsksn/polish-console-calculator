@@ -2,6 +2,8 @@ package stacks
 
 import (
 	"errors"
+
+	"github.com/shopspring/decimal"
 )
 
 type Stack []any
@@ -30,12 +32,12 @@ func (s *Stack) CheckStack() error {
 		return errors.New("длина стека не может быть меньше 2")
 	}
 	switch (*s)[len(*s)-2].(type) {
-	case int:
+	case decimal.Decimal:
 	default:
 		return errors.New("перед оператором должны быть 2 операнда")
 	}
 	switch (*s)[len(*s)-1].(type) {
-	case int:
+	case decimal.Decimal:
 	default:
 		return errors.New("перед оператором должны быть 2 операнда")
 	}

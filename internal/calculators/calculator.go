@@ -2,10 +2,10 @@ package calculators
 
 import (
 	"errors"
-	"strconv"
 	"strings"
 
 	"github.com/jjtsksn/polish-console-calculator/internal/stacks"
+	"github.com/shopspring/decimal"
 )
 
 var stack stacks.Stack
@@ -17,7 +17,7 @@ func Calculate(s string) (any, error) {
 
 	// Обработка данных, введенных пользователем
 	for _, v := range fields {
-		if value, err := strconv.Atoi(v); err == nil {
+		if value, err := decimal.NewFromString(v); err == nil {
 			stack.Push(value)
 		} else {
 			switch v {
@@ -26,7 +26,7 @@ func Calculate(s string) (any, error) {
 					return nil, err
 				}
 			case "-":
-				if err := Remove(); err != nil {
+				if err := Subtract(); err != nil {
 					return nil, err
 				}
 			case "*":
@@ -49,17 +49,17 @@ func Add() error {
 	}
 	a, b := stack[len(stack)-2], stack[len(stack)-1]
 	stack.Pop()
-	stack = append(stack, a.(int)+b.(int))
+	stack = append(stack, a.(decimal.Decimal).Add(b.(decimal.Decimal)))
 	return nil
 }
 
-func Remove() error {
+func Subtract() error {
 	if err := stack.CheckStack(); err != nil {
 		return err
 	}
 	a, b := stack[len(stack)-2], stack[len(stack)-1]
 	stack.Pop()
-	stack = append(stack, a.(int)-b.(int))
+	stack = append(stack, a.(decimal.Decimal).Sub(b.(decimal.Decimal)))
 	return nil
 }
 
@@ -69,7 +69,7 @@ func Multiply() error {
 	}
 	a, b := stack[len(stack)-2], stack[len(stack)-1]
 	stack.Pop()
-	stack = append(stack, a.(int)*b.(int))
+	stack = append(stack, a.(decimal.Decimal).Mul(b.(decimal.Decimal)))
 	return nil
 }
 
@@ -82,6 +82,6 @@ func Devide() error {
 		return errors.New("нельзя делить на 0")
 	}
 	stack.Pop()
-	stack = append(stack, a.(int)/b.(int))
+	stack = append(stack, a.(decimal.Decimal).Div(b.(decimal.Decimal)))
 	return nil
 }
