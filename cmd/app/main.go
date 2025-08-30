@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 
+	"github.com/jjtsksn/polish-console-calculator/internal/calculators"
 	"github.com/jjtsksn/polish-console-calculator/internal/helpers"
 	"github.com/jjtsksn/polish-console-calculator/pkg/clearers"
 	"github.com/jjtsksn/polish-console-calculator/pkg/scanners"
@@ -17,6 +18,6 @@ func main() {
 		fmt.Print("Введите комманду: ")
 		scanner.Scan()
 		command := scanner.Text()
-		helpers.ExecuteCommand(command)
+		calculators.ExecuteCommand(command)
 	}
 }
