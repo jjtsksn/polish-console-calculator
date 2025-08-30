@@ -5,6 +5,6 @@ import (
 	"os"
 )
 
-func NewScanner() bufio.Scanner {
-	return *bufio.NewScanner(os.Stdin)
+func NewScanner() *bufio.Scanner {
+	return bufio.NewScanner(os.Stdin)
 }

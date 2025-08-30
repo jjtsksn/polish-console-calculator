@@ -23,8 +23,8 @@ func main() {
 	}
 }
 
-// Функция принимает комманду в качестве аргумента и выполняет
-// код в зависимости от того, какую команду ввел пользователь
+// Функция executeCommand() принимает комманду в качестве аргумента
+// и выполняет код в зависимости от того, какую команду ввел пользователь
 func executeCommand(command string) {
 	switch command {
 	case "exit":
@@ -36,7 +36,7 @@ func executeCommand(command string) {
 			fmt.Println(err)
 			os.Exit(0)
 		} else {
-			fmt.Println("Резльтат:", ans)
+			fmt.Println("Результат:", ans)
 			fmt.Println("")
 		}
 	}

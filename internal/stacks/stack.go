@@ -6,40 +6,65 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-type Stack []any
-
-// Добавить сущность в стек
-func (s *Stack) Push(a any) {
-	*s = append(*s, a)
+type stack struct {
+	items []decimal.Decimal
 }
 
-// Срезать 2 сущности с конца стека
-func (s *Stack) Pop() error {
-	*s = (*s)[:len(*s)-2]
-	return nil
+// New создает новый стек
+func New() *stack {
+	return &stack{items: make([]decimal.Decimal, 0)}
 }
 
-// Очистить стека
-func (s *Stack) Clear() {
-	*s = nil
+// Push добавляет элемент в стек
+func (s *stack) Push(value decimal.Decimal) {
+	s.items = append(s.items, value)
 }
 
-// Проверка стека перед операцией на:
-// 1: В стеке не должно быть меньше чем 2 сущности
-// 2: 2 последние сущности в стеке должны быть типа int
-func (s *Stack) CheckStack() error {
-	if len(*s) < 2 {
-		return errors.New("длина стека не может быть меньше 2")
+// PopTwo удаляет и возвращает 2 последних элемента из стека
+func (s *stack) PopTwo() (decimal.Decimal, decimal.Decimal, error) {
+	if len(s.items) < 2 {
+		return decimal.Decimal{}, decimal.Decimal{}, errors.New("в стеке не хватает элементов")
 	}
-	switch (*s)[len(*s)-2].(type) {
-	case decimal.Decimal:
-	default:
-		return errors.New("перед оператором должны быть 2 операнда")
+
+	b := s.items[len(s.items)-1]
+	a := s.items[len(s.items)-2]
+	s.items = s.items[:len(s.items)-2]
+	return a, b, nil
+}
+
+// Get возвращает элемент по индекску
+func (s *stack) Get(index int) (decimal.Decimal, error) {
+	if index < 0 || index >= len(s.items) {
+		return decimal.Decimal{}, errors.New("индекс вне диапазона")
 	}
-	switch (*s)[len(*s)-1].(type) {
-	case decimal.Decimal:
-	default:
-		return errors.New("перед оператором должны быть 2 операнда")
+	return s.items[index], nil
+}
+
+// Clear очищает стек
+func (s *stack) Clear() {
+	s.items = nil
+}
+
+// Size возвращает размер стека
+func (s *stack) Size() int {
+	return len(s.items)
+}
+
+// IsEmpty проверят, пустой ли стек
+func (s *stack) IsEmpty() bool {
+	return len(s.items) == 0
+}
+
+// HasFewElements проверяет, что в стеке больше 1 элемента
+func (s *stack) HasFewElements() bool {
+	return len(s.items) > 1
+}
+
+// CheckStack проверяет, что в стеке не менее 2 элементов
+// типа decimal.Decimal
+func (s *stack) CheckStack() error {
+	if len(s.items) < 2 {
+		return errors.New("для операции необходимы 2 операнда в стеке")
 	}
 	return nil
 }

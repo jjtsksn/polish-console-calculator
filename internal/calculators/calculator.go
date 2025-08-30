@@ -8,80 +8,118 @@ import (
 	"github.com/shopspring/decimal"
 )
 
-var stack stacks.Stack
+var stack = stacks.New()
 
-func Calculate(s string) (any, error) {
+func Calculate(s string) (decimal.Decimal, error) {
 	// Очистка стека после получения результата
 	defer stack.Clear()
+
+	// Проверка на пустой ввод
 	fields := strings.Fields(s)
+	if len(fields) == 0 {
+		return decimal.Decimal{}, errors.New("пустой ввод")
+	}
 
 	// Обработка данных, введенных пользователем
 	for _, v := range fields {
 		if value, err := decimal.NewFromString(v); err == nil {
 			stack.Push(value)
 		} else {
-			switch v {
-			case "+":
-				if err := Add(); err != nil {
-					return nil, err
-				}
-			case "-":
-				if err := Subtract(); err != nil {
-					return nil, err
-				}
-			case "*":
-				if err := Multiply(); err != nil {
-					return nil, err
-				}
-			case "/":
-				if err := Devide(); err != nil {
-					return nil, err
-				}
+			if err := handleOperation(v); err != nil {
+				return decimal.Decimal{}, err
 			}
 		}
 	}
-	return stack[0], nil
+
+	if stack.IsEmpty() {
+		return decimal.Decimal{}, errors.New("нет результата")
+	}
+	if stack.HasFewElements() {
+		return decimal.Decimal{}, errors.New("в стеке остались лишние значения")
+	}
+	if result, err := stack.Get(0); err != nil {
+		return decimal.Decimal{}, err
+	} else {
+		return result, nil
+	}
 }
 
-func Add() error {
+// handleOperation определяет операцию, которую необходимо произвести
+func handleOperation(op string) error {
+	switch op {
+	case "+":
+		return add()
+	case "-":
+		return subtract()
+	case "*":
+		return multiply()
+	case "/":
+		return divide()
+	default:
+		return errors.New("неизвестный оператор: " + op)
+	}
+}
+
+// executeBinaryOperation выполняет бинарную операцию
+func executeBinaryOperation(operation func(a, b decimal.Decimal) decimal.Decimal) error {
 	if err := stack.CheckStack(); err != nil {
 		return err
 	}
-	a, b := stack[len(stack)-2], stack[len(stack)-1]
-	stack.Pop()
-	stack = append(stack, a.(decimal.Decimal).Add(b.(decimal.Decimal)))
-	return nil
+	if a, b, err := stack.PopTwo(); err != nil {
+		return err
+	} else {
+		result := operation(a, b)
+		stack.Push(result)
+		return nil
+	}
 }
 
-func Subtract() error {
+// executeBinaryOperationWithCheck выполняет бинарную операцию
+// дополнительно проверяя, равен ли делитель 0 для операции деления
+func executeBinaryOperationWithCheck(operation func(a, b decimal.Decimal) decimal.Decimal,
+	check func(b decimal.Decimal) error) error {
 	if err := stack.CheckStack(); err != nil {
 		return err
 	}
-	a, b := stack[len(stack)-2], stack[len(stack)-1]
-	stack.Pop()
-	stack = append(stack, a.(decimal.Decimal).Sub(b.(decimal.Decimal)))
-	return nil
+	if a, b, err := stack.PopTwo(); err != nil {
+		return err
+	} else {
+		if check != nil {
+			if err := check(b); err != nil {
+				return err
+			}
+		}
+		result := operation(a, b)
+		stack.Push(result)
+		return nil
+	}
 }
 
-func Multiply() error {
-	if err := stack.CheckStack(); err != nil {
-		return err
-	}
-	a, b := stack[len(stack)-2], stack[len(stack)-1]
-	stack.Pop()
-	stack = append(stack, a.(decimal.Decimal).Mul(b.(decimal.Decimal)))
-	return nil
+func add() error {
+	return executeBinaryOperation(func(a, b decimal.Decimal) decimal.Decimal {
+		return a.Add(b)
+	})
 }
 
-func Devide() error {
-	if err := stack.CheckStack(); err != nil {
-		return err
-	}
-	a, b := stack[len(stack)-2], stack[len(stack)-1]
-	if b == 0 {
-		return errors.New("нельзя делить на 0")
-	}
-	stack.Pop()
-	stack = append(stack, a.(decimal.Decimal).Div(b.(decimal.Decimal)))
-	return nil
+func subtract() error {
+	return executeBinaryOperation(func(a, b decimal.Decimal) decimal.Decimal {
+		return a.Sub(b)
+	})
+}
+
+func multiply() error {
+	return executeBinaryOperation(func(a, b decimal.Decimal) decimal.Decimal {
+		return a.Mul(b)
+	})
+}
+
+func divide() error {
+	return executeBinaryOperationWithCheck(func(a, b decimal.Decimal) decimal.Decimal {
+		return a.Div(b)
+	}, func(b decimal.Decimal) error {
+		if b.IsZero() {
+			return errors.New("нельзя делить на 0")
+		}
+		return nil
+	})
 }
